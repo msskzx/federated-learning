@@ -57,8 +57,24 @@ export dockerImage=nvcr.io/nvidia/clara-train-sdk:v3.1.01
 
 docker pull $dockerImage
 
-docker run -it --rm --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --net=host --mount type=bind,source=/your/dataset/location,target=/workspace/data $dockerImage /bin/bash
+docker run -it --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --net=host --mount type=bind,source=/home/msskzx/deepc_fl/dataset,target=/workspace/data $dockerImage /bin/bash
 ```
+
+`source` contains dataset location which is mounted each time
+
+to commit changes
+```
+docker ps
+
+docker commit [CONTAINER_ID] deepc_fl
+```
+
+use new image in future runs
+
+```
+docker run -it --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --net=host --mount type=bind,source=/home/msskzx/deepc_fl/dataset,target=/workspace/data deepc_fl /bin/bash
+```
+
 
 ## Install Model
 We used a model from Clara Medical Model Archive (MMAR). Inside the docker container we use:
@@ -117,11 +133,42 @@ All generated zip files are inside /opt/nvidia/medical/tools/packages folder.
 ```
 ```
 root@Zlightosaur:/opt/nvidia/medical/tools/packages# ls
-admin                 it               org1-a.zip  org2.zip    researcher1  researcher@nvidia.com.zip  researcher@org2.com.zip  server.zip
-admin@nvidia.com.zip  it@org2.com.zip  org1-b.zip  researcher  researcher2  researcher@org1.com.zip    server                   startup
+admin                 client2          it_org2     org2.zip                   researcher@org2.com.zip  researcher_org2
+admin@nvidia.com.zip  client3          org1-a.zip  researcher@nvidia.com.zip  researcher_nvidia        server
+client1               it@org2.com.zip  org1-b.zip  researcher@org1.com.zip    researcher_org1          server.zip
 ```
 
+## Project config
 
+Change the config in `opt/nvidia/medical/tools/project.yml`
+
+## One Client Setup
+
+run server, client1, admin each in a container. Go to `server/startup/` and run, same with `client1/startup/`
+
+```
+sh start start.sh
+```
+and in admin `admin/startup/`
+```
+sh fl.admin.sh
+```
+in the admin window type the admin e-mail `admin@nvidia.com`
+check status as following
+```
+> check_status server
+FL run number has not been set.
+FL server status: training not started
+Registered clients: 1 
+------------------------------------------------------------------------
+| CLIENT NAME | TOKEN                                | SUBMITTED MODEL |
+------------------------------------------------------------------------
+| org1-a      | 5d62c34d-de43-4daf-9d3a-a6462fc9e1d1 |                 |
+------------------------------------------------------------------------
+Done [7934 usecs] 2021-06-15 20:54:35.330436
+```
+
+## Upload and Deploy MMAR
 
 ## References
 - [Install Docker](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04)
