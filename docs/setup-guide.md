@@ -60,7 +60,7 @@ docker pull $dockerImage
 docker run -it --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --net=host --mount type=bind,source=/home/msskzx/deepc_fl/dataset,target=/workspace/data $dockerImage /bin/bash
 ```
 
-`source` contains dataset location which is mounted each time
+`source` contains dataset location which is mounted each time, you can remove it if you don't have the dataset ready.
 
 to commit changes
 ```
@@ -75,26 +75,21 @@ use new image in future runs
 docker run -it --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --net=host --mount type=bind,source=/home/msskzx/deepc_fl/dataset,target=/workspace/data deepc_fl /bin/bash
 ```
 
-
-## Install Model
-We used a model from Clara Medical Model Archive (MMAR). Inside the docker container we use:
-
-```
-ngc registry model list nvidia/med/*
-
-MODEL_NAME=clara_mri_seg_brain_tumors_br16_full_amp
-VERSION=1
-
-ngc registry model download-version nvidia/med/$MODEL_NAME:$VERSION --dest /var/tmp
-```
-
 ## Provisioning
-
+inside `/opt/nvidia/medical/tools/` run:
 ```
 python3 provision.py
-
+```
+use the printed message to get the passwords and run:
+```
 unzip -P $PASSWORD $ZIP_FILE -d $DIRECTORY_TO_EXTRACT_TO
 ```
+current setup uses directories:
+ - `/server/`
+ - `/admin/`
+ - `/client1/`
+ - `/client2/`
+ - `/client3/`
 
 Output and extrction location:
 ```
@@ -140,16 +135,29 @@ client1               it@org2.com.zip  org1-b.zip  researcher@org1.com.zip    re
 
 ## Project config
 
-Change the config in `opt/nvidia/medical/tools/project.yml`
+Change the config in `opt/nvidia/medical/tools/project.yml`, mainly:
+```
+cn: localhost
+```
 
-## One Client Setup
+commit changes to the image
 
-run server, client1, admin each in a container. Go to `server/startup/` and run, same with `client1/startup/`
+## Server
+In a new docker container, go inside `opt/nvidia/medical/tools/packages/server/startup/` and run:
 
 ```
-sh start start.sh
+sh start.sh
 ```
-and in admin `admin/startup/`
+
+## Client1
+In a new docker container, go inside `/packages/client1/startup/` and run:
+
+```
+sh start.sh
+```
+
+## Admin
+In a new docker container, go inside`/packages/admin/startup/` and run:
 ```
 sh fl.admin.sh
 ```
@@ -168,8 +176,60 @@ Registered clients: 1
 Done [7934 usecs] 2021-06-15 20:54:35.330436
 ```
 
-## Upload and Deploy MMAR
+```
+> check_status client
+instance:org1-a : No replies
 
+Done [10048209 usecs] 2021-06-23 15:21:07.599124
+```
+
+## Install Model
+We used a model from Clara Medical Model Archive (MMAR). Inside the docker container we use:
+
+```
+ngc registry model list nvidia/med/*
+
+MODEL_NAME=clara_mri_seg_brain_tumors_br16_full_amp
+VERSION=1
+
+ngc registry model download-version nvidia/med/$MODEL_NAME:$VERSION --dest /opt/nvidia/medical/tools/packages/admin/transfer/
+```
+
+## Upload and Deploy Model
+
+```
+> set_run_number 123
+Create a new run folder: run_123
+Done [17737 usecs] 2021-06-23 16:19:09.272038
+```
+```
+> upload_folder clara_mri_seg_brain_tumors_br16_full_amp
+Created folder /opt/nvidia/medical/tools/packages/server/startup/../transfer/clara_mri_seg_brain_tumors_br16_full_amp
+Done [1440278 usecs] 2021-06-23 16:41:15.208990
+```
+```
+> deploy clara_mri_seg server
+mmar_server has been deployed.
+Done [51335 usecs] 2021-06-23 16:41:28.026814
+```
+```
+> deploy clara_mri_seg client
+instance:org1-a : No replies
+
+Done [10058042 usecs] 2021-06-23 16:41:42.309283
+```
+
+## Start Training
+```
+> start server
+Server training is starting....
+Done [20034 usecs] 2021-06-23 16:45:39.487408
+```
+```
+> start client
+Server training has not started.
+Done [18308 usecs] 2021-06-23 16:45:57.961999
+```
 ## References
 - [Install Docker](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04)
 - [Install Docker Compose](https://docs.docker.com/compose/install/)
@@ -177,3 +237,4 @@ Done [7934 usecs] 2021-06-15 20:54:35.330436
 - [Install Model](https://docs.nvidia.com/clara/tlt-mi/nvmidl/installation.html#downloading-the-models)
 - [Model](https://ngc.nvidia.com/catalog/models/nvidia:med:clara_mri_seg_brain_tumors_br16_full_amp)
 - [Provisioning](https://docs.nvidia.com/clara/tlt-mi/federated-learning/fl_user_guide.html#provisioning-a-federated-learning-project)
+- [Run as Admin](https://docs.nvidia.com/clara/clara-train-archive/3.1/federated-learning/fl_user_guide.html#operate-running-federated-learning-as-an-administrator)
