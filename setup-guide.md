@@ -1,4 +1,12 @@
 # GUIDE
+## Install zerotier one
+
+
+## Connect to Remote Machine
+```
+zerotier-cli join a84ac5c10af3be8c
+ssh muhammad@10.244.159.98
+```
 
 ## Install Docker
 
@@ -22,7 +30,7 @@ sudo apt install docker-ce
 sudo systemctl status docker
 ```
 
-### Use Docker without sudo (optional)
+### Use Docker without sudo
 
 We add a user group in order to use `docker` instead of `sudo docker`.
 
@@ -46,6 +54,11 @@ docker-compose --version
 
 ## Download Data-set
 
+### New Dataset
+Download
+
+### Old Dataset
+
 Downloaded from [here](https://www.cbica.upenn.edu/sbia/Spyridon.Bakas/MICCAI_BraTS/2018/MICCAI_BraTS_2018_Data_Training.zip) 
 
 Information about the dataset available [here](https://www.med.upenn.edu/sbia/brats2018/data.html)
@@ -57,7 +70,7 @@ export dockerImage=nvcr.io/nvidia/clara-train-sdk:v3.1.01
 
 docker pull $dockerImage
 
-docker run -it --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --net=host --mount type=bind,source=/home/msskzx/deepc_fl/dataset,target=/workspace/data $dockerImage /bin/bash
+docker run -it --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --net=host --mount type=bind,source=/home/DATA/Task09_Spleen,target=/workspace/data $dockerImage /bin/bash
 ```
 
 `source` contains dataset location which is mounted each time, you can remove it if you don't have the dataset ready.
@@ -72,7 +85,7 @@ docker commit [CONTAINER_ID] deepc_fl
 use new image in future runs
 
 ```
-docker run -it --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --net=host --mount type=bind,source=/home/msskzx/deepc_fl/dataset,target=/workspace/data deepc_fl /bin/bash
+docker run -it --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --net=host --mount type=bind,source=/home/DATA/Task09_Spleen,target=/workspace/data deepc_fl /bin/bash
 ```
 
 ## Provisioning
@@ -80,16 +93,28 @@ inside `/opt/nvidia/medical/tools/` run:
 ```
 python3 provision.py
 ```
-use the printed message to get the passwords and run:
+which prints the passwords used for extraction 
+```
+cd packages
+```
+and run:
 ```
 unzip -P $PASSWORD $ZIP_FILE -d $DIRECTORY_TO_EXTRACT_TO
 ```
 current setup uses directories:
- - `/server/`
- - `/admin/`
- - `/client1/`
- - `/client2/`
- - `/client3/`
+ - `./server`
+ - `./admin`
+ - `./client1`
+ - `./client2`
+ - `./client3`
+
+ ```
+unzip -P rFNG7KHwfLiDBlWP server.zip -d ./server
+unzip -P ABFUpcfQOKYiZ7l3 org1-a.zip -d ./client1
+unzip -P dE7k5WSiQOmvMsKn org1-b.zip -d ./client2
+unzip -P AYElb0crGZ50Squa org2.zip -d ./client3
+unzip -P lmyAU2IzJZhXKrqO admin@nvidia.com.zip -d ./admin
+ ```
 
 Output and extrction location:
 ```
@@ -149,7 +174,7 @@ In a new docker container, go inside `opt/nvidia/medical/tools/packages/server/s
 sh start.sh
 ```
 
-## Client1
+## Clients
 In a new docker container, go inside `/packages/client1/startup/` and run:
 
 ```
@@ -167,33 +192,41 @@ check status as following
 > check_status server
 FL run number has not been set.
 FL server status: training not started
-Registered clients: 1 
+Registered clients: 3 
 ------------------------------------------------------------------------
 | CLIENT NAME | TOKEN                                | SUBMITTED MODEL |
 ------------------------------------------------------------------------
-| org1-a      | 5d62c34d-de43-4daf-9d3a-a6462fc9e1d1 |                 |
+| org1-a      | 9d78aa21-93e2-4721-b0db-72e631b12e18 |                 |
+| org1-b      | 8cd3fb28-1210-47f3-a122-544ccd2efed2 |                 |
+| org2        | 275b0315-9305-443c-858d-220b44c7a805 |                 |
 ------------------------------------------------------------------------
-Done [7934 usecs] 2021-06-15 20:54:35.330436
-```
-
-```
+Done [7316 usecs] 2021-07-09 14:31:00.641830
 > check_status client
-instance:org1-a : No replies
+instance:org1-a : client name: org1-a   token: 9d78aa21-93e2-4721-b0db-72e631b12e18     status: training not started
+instance:org1-b : client name: org1-b   token: 8cd3fb28-1210-47f3-a122-544ccd2efed2     status: training not started
+instance:org2 : client name: org2       token: 275b0315-9305-443c-858d-220b44c7a805     status: training not started
 
-Done [10048209 usecs] 2021-06-23 15:21:07.599124
+Done [407687 usecs] 2021-07-09 14:31:05.973040
 ```
 
 ## Install Model
 We used a model from Clara Medical Model Archive (MMAR). Inside the docker container we use:
 
+### New Model
 ```
 ngc registry model list nvidia/med/*
-
-MODEL_NAME=clara_mri_seg_brain_tumors_br16_full_amp
+MODEL_NAME=clara_pt_spleen_ct_segmentation
 VERSION=1
-
 ngc registry model download-version nvidia/med/$MODEL_NAME:$VERSION --dest /opt/nvidia/medical/tools/packages/admin/transfer/
 ```
+### Old Model
+```
+MODEL_NAME=clara_mri_seg_brain_tumors_br16_full_amp
+VERSION=1
+```
+### Config
+
+## (Optional) Missing Config Files
 
 ## Upload and Deploy Model
 
@@ -203,17 +236,17 @@ Create a new run folder: run_123
 Done [17737 usecs] 2021-06-23 16:19:09.272038
 ```
 ```
-> upload_folder clara_mri_seg_brain_tumors_br16_full_amp
-Created folder /opt/nvidia/medical/tools/packages/server/startup/../transfer/clara_mri_seg_brain_tumors_br16_full_amp
+> upload_folder clara_pt_spleen_ct_segmentation_v1
+Created folder /opt/nvidia/medical/tools/packages/server/startup/../transfer/clara_pt_spleen_ct_segmentation_v1
 Done [1440278 usecs] 2021-06-23 16:41:15.208990
 ```
 ```
-> deploy clara_mri_seg server
+> deploy clara_pt_spleen_ct_segmentation_v1 server
 mmar_server has been deployed.
 Done [51335 usecs] 2021-06-23 16:41:28.026814
 ```
 ```
-> deploy clara_mri_seg client
+> deploy clara_pt_spleen_ct_segmentation_v1 client
 instance:org1-a : No replies
 
 Done [10058042 usecs] 2021-06-23 16:41:42.309283

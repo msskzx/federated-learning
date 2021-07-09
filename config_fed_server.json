@@ -1,0 +1,59 @@
+{
+    "format_version": 1,
+
+    "servers": [
+        {
+            "min_num_clients": 2,
+            "max_num_clients": 100,
+            "wait_after_min_clients": 10,
+            "heart_beat_timeout": 600,
+            "start_round": 0,
+            "num_rounds": 600
+        }
+    ],
+    "aggregator":
+      {
+        "name": "AccumulateWeightedAggregator",
+        "args": {
+          "exclude_vars": "dummy",
+          "aggregation_weights":
+              {
+                "org1-a": 1.0,
+                "org1-b": 1.0
+              }
+        }
+      },
+    "outbound_filters": [
+    ],
+    "inbound_filters": [
+    ],
+    "model_persistor":
+    {
+        "name": "PTFileModelPersistor",
+        "args": {
+          "exclude_vars": "dummy",
+          "model": {
+            "path": "monai.networks.nets.segresnet.SegResNet",
+            "args": {
+              "blocks_down": [1,2,2,4],
+              "blocks_up": [1,1,1],
+              "init_filters": 16,
+              "in_channels": 4,
+              "out_channels": 3,
+              "dropout_prob": 0.2
+            }
+          }
+        }
+    },
+    "shareable_generator": {
+      "name": "FullModelShareableGenerator"
+    },
+    "handlers":
+    [
+        {
+            "name": "IntimeModelSelectionHandler",
+            "args": {}
+        }
+    ]
+
+}
