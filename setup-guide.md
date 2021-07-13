@@ -63,7 +63,7 @@ docker-compose --version
 ## Download Data-set
 
 ### New Dataset
-Download
+[available here](https://github.com/NVIDIA/clara-train-examples/blob/5967cbbd051566596b6a5c363f06002ac9f234c5/PyTorch/NoteBooks/Data/DownloadDecathlonDataSet.ipynb)
 
 ### Old Dataset
 
@@ -92,13 +92,13 @@ to commit changes
 ```
 docker ps
 
-docker commit [CONTAINER_ID] deepc_fl
+docker commit [CONTAINER_ID] clara_v4
 ```
 
 use new image in future runs
 
 ```
-docker run -it --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --net=host --mount type=bind,source=/home/DATA/Task09_Spleen,target=/workspace/data clara_v4 /bin/bash
+nvidia-docker run -it --shm-size=1G --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --net=host --mount type=bind,source=/home/DATA/Task09_Spleen,target=/workspace/data clara_v4 /bin/bash
 ```
 packages directory:
 ```
@@ -323,6 +323,13 @@ instance:org1-b : client name: org1-b   token: cac3650f-077e-4c9d-8379-0ef0cacd5
 instance:org2 : client name: org2       token: 6080cd48-f26b-47d3-8e6b-d7cfe7b07109     status: training stopped
 
 Done [214223 usecs] 2021-07-12 15:28:54.106574
+```
+## Errors
+```
+Error processing config /opt/conda/lib/python3.8/site-packages/packages/client1/startup/../run_2/mmar_org1-a/config/config_train.json: No CUDA GPUs are available
+```
+```
+CUDA initialization: Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx (Triggered internally at  ../c10/cuda/CUDAFunctions.cpp:104.)
 ```
 ## References
 - [Install Docker](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04)
