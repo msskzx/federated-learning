@@ -7,13 +7,13 @@ curl -s https://install.zerotier.com | sudo bash
 ## Join Remote Network
 use shared network ID to join network
 ```
-zerotier-cli join a84ac5c10af3be8c
+zerotier-cli join NETWORK_NAME
 ```
 wait for apporval, and share the SSH public key
 ## Connect to Remote Machine
 using private SSH key connect to the machine
 ```
-ssh muhammad@10.244.159.98
+ssh muhammad@IP_ADDRESS
 ```
 
 ## Install Docker
